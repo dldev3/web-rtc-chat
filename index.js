@@ -9,5 +9,35 @@ const io = require('socket.io')(server, {
     }
 });
 
+app.use(cors());
+
+const PORT = process.env.PORT || 5000;
+
+app.get("/", (req,res) => {
+    res.send("server is running");
+});
+
+io.on('connection', (socket)=>{
+   socket.emit('me', socket.id);
+
+   socket.on('disconnet', ()=>{
+       socket.broadcast.emit("call ended")
+   });
+
+   socket.on("calluser", ({ userToCall, signalData, from, name })=>{
+    io.to(userToCall).emit("calluser", { signal: signalData,from, name});
+   });
+
+   socket.on("answercall", (data) => {
+    io.to(data.to).emit("callaccepted", data.signal);
+   });
+
+});
+
+server.listen(PORT, () =>  {
+    console.log(`Server is running at ${PORT} `);
+});
+
+
 
 
